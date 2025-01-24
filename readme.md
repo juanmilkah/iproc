@@ -31,3 +31,6 @@ A Commandline tool for image processing
 
     Filter: iproc filter grayscale input.jpg output.jpg
 ```
+
+## Licensing
+The project is licensed under the [GPL-3 License](LICENSE)
