@@ -57,7 +57,7 @@ enum Commands {
     Mirror { input: String, output: String },
 }
 
-fn main() {
+fn main() -> Result<(), String> {
     let cli = Cli::parse();
 
     match cli.command {
@@ -67,9 +67,11 @@ fn main() {
             input,
             output,
         } => {
-            let img = image::open(input).unwrap();
+            let img = image::open(&input).map_err(|_| format!("Failed to open file: {input}"))?;
             let resized = img.resize_exact(width, height, imageops::FilterType::Lanczos3);
-            resized.save(output).unwrap();
+            if let Err(err) = resized.save(output) {
+                eprintln!("Failed to save final output: {err}");
+            }
         }
         Commands::Crop {
             x,
@@ -79,69 +81,88 @@ fn main() {
             input,
             output,
         } => {
-            let mut img = image::open(input).unwrap();
+            let mut img =
+                image::open(&input).map_err(|_| format!("Failed to open file: {input}"))?;
             let cropped = img.crop(x, y, width, height);
-            cropped.save(output).unwrap();
+            if let Err(err) = cropped.save(output) {
+                eprintln!("Failed to save final output: {err}");
+            }
         }
         Commands::Rotate {
             degrees,
             input,
             output,
         } => {
-            let img = image::open(input).unwrap();
+            let img = image::open(&input).map_err(|_| format!("Failed to open file: {input}"))?;
             let rotated = match degrees {
                 90 => img.rotate90(),
                 180 => img.rotate180(),
                 270 => img.rotate270(),
                 _ => img, // No rotation for unsupported degrees
             };
-            rotated.save(output).unwrap();
+            if let Err(err) = rotated.save(output) {
+                eprintln!("Failed to save final output: {err}");
+            }
         }
         Commands::Watermark {
             watermark_path,
             input,
             output,
         } => {
-            let mut img = image::open(input).unwrap();
-            let watermark = image::open(watermark_path).unwrap();
+            let mut img =
+                image::open(&input).map_err(|_| format!("Failed to open file: {input}"))?;
+            let watermark =
+                image::open(watermark_path).map_err(|_| format!("Failed to open file: {input}"))?;
             imageops::overlay(&mut img, &watermark, 10, 10); // Adjust position as needed
-            img.save(output).unwrap();
+            if let Err(err) = img.save(output) {
+                eprintln!("Failed to save final output: {err}");
+            }
         }
         Commands::Flip {
             direction,
             input,
             output,
         } => {
-            let img = image::open(input).unwrap();
+            let img = image::open(&input).map_err(|_| format!("Failed to open file: {input}"))?;
             let flipped = match direction.as_str() {
                 "vertical" => img.flipv(),
                 "horizontal" => img.fliph(),
                 _ => img, // No flip for invalid direction
             };
-            flipped.save(output).unwrap();
+            if let Err(err) = flipped.save(output) {
+                eprintln!("Failed to save final output: {err}");
+            }
         }
         Commands::Mirror { input, output } => {
-            let img = image::open(input).unwrap();
+            let img = image::open(&input).map_err(|_| format!("Failed to open file: {input}"))?;
             let mirrored = imageops::flip_horizontal(&img);
-            mirrored.save(output).unwrap();
+            if let Err(err) = mirrored.save(output) {
+                eprintln!("Failed to save final output: {err}");
+            }
         }
 
         Commands::Convert { input, output } => {
-            let img = image::open(input).unwrap();
-            img.save(output).unwrap(); // The format is inferred from the output file extension
+            let img = image::open(&input).map_err(|_| format!("Failed to open file: {input}"))?;
+            // format is inferred from extension
+            if let Err(err) = img.save(output) {
+                eprintln!("Failed to save final output: {err}");
+            }
         }
         Commands::Filter {
             filter,
             input,
             output,
         } => {
-            let img = image::open(input).unwrap();
+            let img = image::open(&input).map_err(|_| format!("Failed to open file: {input}"))?;
             let filtered = match filter.as_str() {
                 "grayscale" => img.grayscale(),
 
                 _ => img, // No filter for unsupported types
             };
-            filtered.save(output).unwrap();
+            if let Err(err) = filtered.save(output) {
+                eprintln!("Failed to save final output: {err}");
+            }
         }
     }
+    Ok(())
 }
